@@ -14,7 +14,7 @@ pipeline {
         }
         stage('S3 Upload') {
             steps {
-                withAWS(region: 'us-east-1', credentials: 'a77792f1-9a46-4bc7-8afb-e042a870a77f') {
+                withAWS(region: 'us-east-1', credentials: 'f5d36311-dcee-4c9d-bd4f-62ca3bc759e2	') {
                     sh 'ls -la'
                     sh 'aws s3 cp dist/angular-tour-of-heroes/browser/. s3://sk-jenkins-angular/ --recursive'
                 }
