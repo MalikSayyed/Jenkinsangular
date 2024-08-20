@@ -1,24 +1,48 @@
 pipeline {
     agent any
 
+    environment {
+        NODEJS_HOME = tool name: 'nodejs', type: 'NodeJS' 
+        PATH = "${env.NODEJS_HOME}/bin:${env.PATH}"
+        S3_BUCKET = 'sk-jenkins-angular'  // Replace with your actual S3 bucket name
+        AWS_CREDENTIALS_ID = 'f5d36311-dcee-4c9d-bd4f-62ca3bc759e2'  // Replace with your AWS credentials ID in Jenkins
+    }
+
     stages {
-        stage('Build') {
+        stage('Checkout') {
             steps {
-                sh 'ls'
-                sh 'npm install'
-                sh 'echo n | ng analytics off'
-                sh 'ng build'
-                sh 'cd dist && ls'
-                sh 'cd dist/angular-tour-of-heroes/browser && ls'
+                git credentialsId: '55221542-684c-42b9-83e6-9691c039263c', url: 'https://github.com/MalikSayyed/Jenkinsangular.git'  // Replace with your GitHub credentials ID, username, and repository
             }
         }
-        stage('S3 Upload') {
+
+        stage('Install Dependencies') {
             steps {
-                withAWS(region: 'us-east-1', credentials: 'f5d36311-dcee-4c9d-bd4f-62ca3bc759e2	') {
-                    sh 'ls -la'
-                    sh 'aws s3 cp dist/angular-tour-of-heroes/browser/. s3://sk-jenkins-angular/ --recursive'
+                dir('D:\\ATM\\my-angular-app') { // Change to the directory where your Angular app is installed
+                    sh 'npm install'
                 }
             }
+        }
+
+        stage('Build') {
+            steps {
+                dir('D:\\ATM\\my-angular-app') { // Change to the directory where your Angular app is installed
+                    sh 'npm run build --prod'
+                }
+            }
+        }
+
+        stage('Upload to S3') {
+            steps {
+                withAWS(credentials: AWS_CREDENTIALS_ID) {
+                    s3Upload(bucket: S3_BUCKET, path: '', workingDir: 'D:\\ATM\\my-angular-app\\dist\\my-angular-app', includePathPattern: '**/*')  // Adjust the working directory to point to the Angular build output
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
         }
     }
 }
